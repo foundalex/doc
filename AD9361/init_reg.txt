@@ -30,29 +30,56 @@
 	------------------------------------------
 	LO Control
 	------------------------------------------
-	rx_synthesizer_frequency_hz							|2400000000UL|  												  | DEFAULT 		  | rx_synthesizer_frequency_hz *** adi,rx-synthesizer-frequency-hz |
-    tx_synthesizer_frequency_hz							|2400000000UL|  												  | DEFAULT 		  | tx_synthesizer_frequency_hz *** adi,tx-synthesizer-frequency-hz |
+	rx_synthesizer_frequency_hz							|2400000000UL|  	DEFAULT 		  												  | rx_synthesizer_frequency_hz *** adi,rx-synthesizer-frequency-hz |
+    tx_synthesizer_frequency_hz							|2400000000UL|  	DEFAULT 		  												  | tx_synthesizer_frequency_hz *** adi,tx-synthesizer-frequency-hz |
 	------------------------------------------
 	Rate & BW Control
 	------------------------------------------
 	rx_path_clock_frequencies[6]						|{ 983040000, 245760000, 122880000, 61440000, 30720000, 30720000 }| DEFAULT 		  | uint32_t rx_path_clock_frequencies[6] *** adi,rx-path-clock-frequencies
 	tx_path_clock_frequencies[6]						|{ 983040000, 122880000, 122880000, 61440000, 30720000, 30720000 }| DEFAULT 		  | uint32_t tx_path_clock_frequencies[6] *** adi,tx-path-clock-frequencies
-    rf_rx_bandwidth_hz									|18000000|  													  | DEFAULT 		  | rf_rx_bandwidth_hz *** adi,rf-rx-bandwidth-hz
-    rf_tx_bandwidth_hz									|18000000|  													  | DEFAULT 		  | rf_tx_bandwidth_hz *** adi,rf-tx-bandwidth-hz
+    rf_rx_bandwidth_hz									|18000000|  		DEFAULT 		  												  | rf_rx_bandwidth_hz *** adi,rf-rx-bandwidth-hz
+    rf_tx_bandwidth_hz									|18000000|  		DEFAULT 		  												  | rf_tx_bandwidth_hz *** adi,rf-tx-bandwidth-hz
 	------------------------------------------
 	RF Port Control
 	------------------------------------------
-	tx_rf_port_input_select								| 0 | 															  | DEFAULT 		  | rx_rf_port_input_select *** adi,rx-rf-port-input-select
-	rx_rf_port_input_select								| 0 | 															  | DEFAULT 		  | tx_rf_port_input_select *** adi,tx-rf-port-input-select
+	tx_rf_port_input_select								| 0 | 				DEFAULT 		  												  | rx_rf_port_input_select *** adi,rx-rf-port-input-select
+	rx_rf_port_input_select								| 0 | 				DEFAULT 		  												  | tx_rf_port_input_select *** adi,tx-rf-port-input-select
 	------------------------------------------
 	TX Attenuation Control
 	------------------------------------------
-	tx_attenuation_mdB									| 10000 | 														  | DEFAULT                                            | tx_attenuation_mdB *** adi,tx-attenuation-mdB
-	update_tx_gain_in_alert_enable						| 0	    | 														  | N/A when frequency_division_duplex_mode_enable = 1 | update_tx_gain_in_alert_enable *** adi,update-tx-gain-in-alert-enable
+	tx_attenuation_mdB									| 10000 | 			DEFAULT                                            				  | tx_attenuation_mdB *** adi,tx-attenuation-mdB
+	update_tx_gain_in_alert_enable						| 0	    | 			N/A when frequency_division_duplex_mode_enable = 1 				  | update_tx_gain_in_alert_enable *** adi,update-tx-gain-in-alert-enable
 	------------------------------------------
 	Reference Clock Control
 	------------------------------------------
-	xo_disable_use_ext_refclk_enable 					| 1 |              												  | Expect external clock into XTALN            | xo_disable_use_ext_refclk_enable *** adi,xo-disable-use-ext-refclk-enable
-    dcxo_coarse_and_fine_tune[2] 						| {3, 5920} |      												  | ~0 ppm DCXO trim (N/A if ext clk)           | dcxo_coarse_and_fine_tune[2] *** adi,dcxo-coarse-and-fine-tune
-    clk_output_mode_select 								| CLKOUT_DISABLE | 												  | disable clkout pin (see enum ad9361_clkout) | clk_output_mode_select *** adi,clk-output-mode-select
+	xo_disable_use_ext_refclk_enable 					| 1 |              	Expect external clock into XTALN            					  | xo_disable_use_ext_refclk_enable *** adi,xo-disable-use-ext-refclk-enable
+    dcxo_coarse_and_fine_tune[2] 						| {3, 5920} |      	~0 ppm DCXO trim (N/A if ext clk)           					  | dcxo_coarse_and_fine_tune[2] *** adi,dcxo-coarse-and-fine-tune
+    clk_output_mode_select 								| CLKOUT_DISABLE | 	disable clkout pin (see enum ad9361_clkout) 					  | clk_output_mode_select *** adi,clk-output-mode-select
+	------------------------------------------    
+	Gain Control
+	------------------------------------------
+	agc_adc_large_overload_exceed_counter				| RF_GAIN_SLOWATTACK_AGC | RX1 BLADERF_GAIN_DEFAULT = slow attack AGC   			  | gc_rx1_mode *** adi,gc-rx1-mode			            
+	agc_adc_large_overload_inc_steps					| RF_GAIN_SLOWATTACK_AGC | RX2 BLADERF_GAIN_DEFAULT = slow attack AGC   			  | gc_rx2_mode *** adi,gc-rx2-mode			            
+	agc_adc_lmt_small_overload_prevent_gain_inc_enable	| 58   | 			magic AGC setting, see AD9361 docs								  | gc_adc_large_overload_thresh *** adi,gc-adc-large-overload-thresh									
+	agc_adc_small_overload_exceed_counter				| 4    | 			magic AGC setting, see AD9361 docs								  | gc_adc_ovr_sample_size *** adi,gc-adc-ovr-sample-size							
+	agc_dig_gain_step_size								| 47   | 			magic AGC setting, see AD9361 docs								  | gc_adc_small_overload_thresh *** adi,gc-adc-small-overload-thresh							
+	agc_dig_saturation_exceed_counter					| 8192 | 			magic AGC setting, see AD9361 docs								  | gc_dec_pow_measurement_duration *** adi,gc-dec-pow-measurement-duration							
+	agc_gain_update_interval_us							| 0    | 			magic AGC setting, see AD9361 docs								  | gc_dig_gain_enable *** adi,gc-dig-gain-enable							
+	agc_immed_gain_change_if_large_adc_overload_enable	| 800  | 			magic AGC setting, see AD9361 docs								  | gc_lmt_overload_high_thresh *** adi,gc-lmt-overload-high-thresh							
+	agc_immed_gain_change_if_large_lmt_overload_enable	| 704  | 			magic AGC setting, see AD9361 docs								  | gc_lmt_overload_low_thresh *** adi,gc-lmt-overload-low-thresh							
+	agc_inner_thresh_high								| 24   | 			magic AGC setting, see AD9361 docs								  | gc_low_power_thresh *** adi,gc-low-power-thresh							
+	agc_inner_thresh_high_dec_steps						| 15   | 			magic AGC setting, see AD9361 docs								  | gc_max_dig_gain *** adi,gc-max-dig-gain							
+	agc_inner_thresh_low									
 	
+	
+									
+									
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
