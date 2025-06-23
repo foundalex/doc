@@ -1,0 +1,186 @@
+rfic_host.c
+	_rfic_host_initialize
+		ad9361_init (передаем структуры)
+			ad9361_reset (ресетим трансивер)
+				ad9361_spi_read (после ресета читаем ID)
+				ad9361_setup (настраиваем трансивер)
+					0x3DF - 00000001 - Control register (включаем контрольный регистр)
+					0x2A6 - 00001110 - установка уровня пульсаций. Необходимо сделать до включения клока (0x009)
+					0x2A8 - 00001110 - установка уровня пульсаций. Необходимо сделать до включения клока (0x009)
+					
+					
+					Настройка DCXO (Digitally Controled Crystal Oscillator) - используется для исправления ошибок клока при подключении внешнего осциллятора. Работает когда DCXO включен и бит D4 ("XO Bypass") регистра 0x009 равен 0. Настраивается путем подбора емкости по формуле
+					0x292 - 00000011 (3)
+					0x294 - 00000000 (0)
+					0x293 - 10111001 (0)
+					
+					Настройка делителя Rx Ref (клока?)
+					0x2AB - 00000110
+					0x2AC - 00010010
+					
+					Регистр включения клоков. Включение BPLL и отключение DCXO, т.к используется внешний генератор
+					0x009 - 00010111 
+					
+					(set_rate?)
+					
+					
+					Настройка RX/TX путей
+					ad9361_set_trx_clock_chain
+						0x003 - 00000000
+						
+					Настройка RF входов
+					ad9361_rf_port_setup
+					    0x004 - 00000011 (RX1A_N & RX1A_P) and (RX2A_N & RX2A_P) enabled; balanced
+						
+					Настройка параллельного порта (Digital Interface)
+					ad9361_pp_port_setup
+						Ничего не инвертируем и не свапаем
+						0x010 - 00000000 
+						0x011 - 00000000
+						0x012 - 00000000
+						RX & TX data delay
+						0x006 - 00010000
+						0x007 - 00000000
+						
+						0x03C - 00000111 - LVDS Driver amplitude control. 
+						0x03D - 11111111
+						0x03E - 00001111
+						
+					Настройка AUXDAC и внешние LNA
+					ad9361_auxdac_setup
+						ad9361_auxdac_set - настройка первого AUXDAC
+						ad9361_auxdac_set - настройка второго AUXDAC
+						
+						0x026 - 00000000 (?) - внешние LNA
+					
+						0x030 - 00000000 - AuxDAC1 RX Delay
+						0x031 - 00000000 - AuxDAC1 TX Delay
+						0x032 - 00000000 - AuxDAC2 RX Delay
+						0x033 - 00000000 - AuxDAC2 TX Delay
+						
+					Настройка AUXDAC и температурные сенсоры 
+					ad9361_auxadc_setup
+						0x00B - 11001110 - temp sense offset
+						0x00C - 00000000 - start temp reading 
+						0x00D - 00000001 - включение периодического измерения температуры
+						0x00F - 00000000 - децимация температурного сенсора
+						0x01С - (?) - - AuxADC clock divider
+						0x01D - 00000000 - AuxADC Clock Config. Включение AuxADC без децимации
+						
+					Настройка выходных пинов
+					ad9361_ctrl_outs_setup
+						0x035 - 00000111 - 
+						0x036 - 11111111 - включение всех выходных пинов (CTRL_OUT0 - CTRL_OUT7)
+						
+					Настройка GPO пинов (GPO_0 - GPO_3) - используются для контроля других девайсов
+					ad9361_gpo_setup
+						0x020 - 000000000
+						0x027 - 000000000
+						0x28 - 0x2F - 00000000 - GPO RX/TX Delay
+						
+						
+					Настройка клока (38400000/100000)-1
+					ad9361_set_ref_clk_cycles
+						0x03A - 01111111 - reference clock cycles per us
+						
+					Настройка external LNA
+					ad9361_setup_ext_lna
+						0x026 -
+						0x12C - 00000000 - ext LNA high gain
+						0x12D - 00000000 - ext LNA low gain
+					
+					clk_set_rate
+					
+					RF Analog Synthesizer charge pump calibration RX
+					ad9361_txrx_synth_cp_calib
+						0x24B - 00010111 - cp level detect
+						0x24D - 00000000
+						0x261 - 00000000 - (5mA - recommended)
+						0x248 - 00001011 - min dropout range, LDO Vout - 1.14V, min noise, 3mA bias
+						0x246 - 00000010 - отключение температурного коэффициента при калибровке VCO
+						0x23B - 10000000 - charge pump current
+						0x23D - 00000000 - cp config
+						
+						0x249 - 01111111 - не включаем калибровку VCO
+						0x012 - 00001000 (?)
+						ENSM (Enable State Machine Registers)
+						0x015 - 00000100
+						0x014 - 00000101
+						0x013 - 00000001
+						0x23D - 00000100
+						
+					RF Analog Synthesizer charge pump calibration TX
+					ad9361_txrx_synth_cp_calib
+						
+					Load the Gm Sub Table
+					ad9361_load_mixer_gm_subtable
+						0x13F - 00000010 - start gm sub table clock
+						
+					Setup the Gain Control Blocks
+					ad9361_gc_setup
+						0x0FA -  11100101 - AGC Config1 - Fast Attack Automatic Gain Control
+						 
+					Baseband RX analog filter calibration.
+					ad9361_rx_bb_analog_filter_calib
+						
+					
+					RX TIA calibration
+					ad9361_rx_tia_calib
+					
+					TX secondary filter calibration.
+					ad9361_tx_bb_second_filter_calib
+					
+					Setup the RX ADC
+					ad9361_rx_adc_setup
+					
+					Baseband DC offset calibration
+					ad9361_bb_dc_offset_calib
+						0x193 - 00111111 
+						0x190 - 00001111
+						0x194 - 00000001
+
+					RF DC offset calibration
+					ad9361_rf_dc_offset_calib
+						
+					
+					RX tracking calibrations
+					ad9361_tracking_control
+						
+					
+					Настройка параллельного порта (Digital Interface)
+					ad9361_pp_port_setup
+					
+					ENSM mode options helper function
+					ad9361_set_ensm_mode
+					
+					Set the attenuation for the selected TX channels
+					ad9361_set_tx_atten
+					
+					Setup the RSSI
+					ad9361_rssi_setup
+					
+					Clock output mode
+					ad9361_clkout_control
+					
+					Setup TX Monitor
+					ad9361_txmon_setup
+					
+					
+					
+      
+					
+						
+						
+						
+							 
+						
+					
+						
+						
+
+					
+						
+						
+					
+					
+					

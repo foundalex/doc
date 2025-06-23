@@ -1345,15 +1345,40 @@ struct elna_control *ctrl)
 {
 	ad9361_spi_writef(phy->spi, REG_EXTERNAL_LNA_CTRL, EXTERNAL_LNA1_CTRL,
 		ctrl->elna_1_control_en);
+    /* ---- External LNA Control
+    0x026 - ?
+        [7] - AuxDAC Manual Select
+        [6] - External LNA 2 Control
+        [5] - External LNA 1 Control  
+        [4] - GPO Manual Select
+        [3:0] - Open
+    */
 
 	ad9361_spi_writef(phy->spi, REG_EXTERNAL_LNA_CTRL, EXTERNAL_LNA2_CTRL,
 		ctrl->elna_2_control_en);
-
+    /* ---- External LNA Control
+    0x026 - ?
+        [7] - AuxDAC Manual Select
+        [6] - External LNA 2 Control
+        [5] - External LNA 1 Control  
+        [4] - GPO Manual Select
+        [3:0] - Open
+    */
 	ad9361_spi_write(phy->spi, REG_EXT_LNA_HIGH_GAIN,
 		EXT_LNA_HIGH_GAIN(ctrl->gain_mdB / 500));
+    /* ---- External LNA High Gain
+    0x12C - 00000000
+        [7:6] - Open
+        [5:0] - Ext High Gain
+    */
 
 	return ad9361_spi_write(phy->spi, REG_EXT_LNA_LOW_GAIN,
 		EXT_LNA_LOW_GAIN(ctrl->bypass_loss_mdB / 500));
+    /* ---- External LNA High Gain
+    0x12D - 00000000
+        [7:6] - Open
+        [5:0] - Ext Low Gain
+    */
 }
 
 /**
@@ -1385,23 +1410,63 @@ static int32_t ad9361_load_mixer_gm_subtable(struct ad9361_rf_phy *phy)
 
 	ad9361_spi_write(phy->spi, REG_GM_SUB_TABLE_CONFIG,
 		START_GM_SUB_TABLE_CLOCK); /* Start Clock */
+    /* ---- GM Sub Table Config
+    0x13F - 00000010
+        [7:3] - Open
+        [2] - Write Gm Sub Table
+        [1] - Start GM Sub Table Clock
+        [0] - Open
+    */
 
 	for (i = 0, addr = ARRAY_SIZE(gm_st_ctrl); i < (int64_t)ARRAY_SIZE(gm_st_ctrl); i++) {
 		ad9361_spi_write(phy->spi, REG_GM_SUB_TABLE_ADDRESS, --addr); /* Gain Table Index */
+        /* ---- GM Sub Table Address
+        0x138
+        */
 		ad9361_spi_write(phy->spi, REG_GM_SUB_TABLE_BIAS_WRITE, 0); /* Bias */
+        /* ---- GM Sub Table Bias Word Write 
+        0x13A
+        */
 		ad9361_spi_write(phy->spi, REG_GM_SUB_TABLE_GAIN_WRITE, gm_st_gain[i]); /* Gain */
+        /* ---- GM Sub Table Gain 
+        0x139
+        */
 		ad9361_spi_write(phy->spi, REG_GM_SUB_TABLE_CTRL_WRITE, gm_st_ctrl[i]); /* Control */
+        /* ---- GM Sub Table Control Word Write 
+        0x13B
+        */
 		ad9361_spi_write(phy->spi, REG_GM_SUB_TABLE_CONFIG,
 			WRITE_GM_SUB_TABLE | START_GM_SUB_TABLE_CLOCK); /* Write Words */
+        /* ---- GM Sub Table Config 
+        0x13F
+        */
 		ad9361_spi_write(phy->spi, REG_GM_SUB_TABLE_GAIN_READ, 0); /* Dummy Delay */
+        /* ---- GM Sub Table Gain Word Read 
+        0x13C
+        */
 		ad9361_spi_write(phy->spi, REG_GM_SUB_TABLE_GAIN_READ, 0); /* Dummy Delay */
+        /* ---- GM Sub Table Gain Word Read 
+        0x13C
+        */
 	}
 
-	ad9361_spi_write(phy->spi, REG_GM_SUB_TABLE_CONFIG, START_GM_SUB_TABLE_CLOCK); /* Clear Write */
-	ad9361_spi_write(phy->spi, REG_GM_SUB_TABLE_GAIN_READ, 0); /* Dummy Delay */
-	ad9361_spi_write(phy->spi, REG_GM_SUB_TABLE_GAIN_READ, 0); /* Dummy Delay */
-	ad9361_spi_write(phy->spi, REG_GM_SUB_TABLE_CONFIG, 0); /* Stop Clock */
 
+	ad9361_spi_write(phy->spi, REG_GM_SUB_TABLE_CONFIG, START_GM_SUB_TABLE_CLOCK); /* Clear Write */
+    /* ---- GM Sub Table Config 
+        0x13F
+    */
+	ad9361_spi_write(phy->spi, REG_GM_SUB_TABLE_GAIN_READ, 0); /* Dummy Delay */
+    /* ---- GM Sub Table Gain Word Read 
+        0x13C
+    */
+	ad9361_spi_write(phy->spi, REG_GM_SUB_TABLE_GAIN_READ, 0); /* Dummy Delay */
+    /* ---- GM Sub Table Gain Word Read 
+        0x13C
+    */
+	ad9361_spi_write(phy->spi, REG_GM_SUB_TABLE_CONFIG, 0); /* Stop Clock */
+    /* ---- GM Sub Table Config 
+        0x13F
+    */
 	return 0;
 }
 
@@ -2507,6 +2572,16 @@ static int32_t ad9361_rx_tia_calib(struct ad9361_rf_phy *phy, uint32_t bb_bw_Hz)
 	}
 
 	ad9361_spi_write(phy->spi, REG_RX_TIA_CONFIG, reg1DB);
+    // 0X60
+    /* ---- Rx Tia Config
+        0x1DB - 01100000
+        [7:5] - TIA2 Sel CC 
+        [4] - Open
+        [3] - TIA2 Override C
+        [2] - TIA2 Override R
+        [1] - TIA1 Override C
+        [0] - TIA1 Override R
+    */ 
 	ad9361_spi_write(phy->spi, REG_TIA1_C_LSB, reg1DC);
 	ad9361_spi_write(phy->spi, REG_TIA1_C_MSB, reg1DD);
 	ad9361_spi_write(phy->spi, REG_TIA2_C_LSB, reg1DE);
@@ -2541,6 +2616,9 @@ static int32_t ad9361_rx_bb_analog_filter_calib(struct ad9361_rf_phy *phy,
 
 	/* Set RX baseband filter divide value */
 	ad9361_spi_write(phy->spi, REG_RX_BBF_TUNE_DIVIDE, phy->rxbbf_div);
+    /* ---- RX BBF Tune Divide
+        0x1F8 - 
+    */
 	ad9361_spi_writef(phy->spi, REG_RX_BBF_TUNE_CONFIG, BIT(0), phy->rxbbf_div >> 8);
 
 	/* Write the BBBW into registers 0x1FB and 0x1FC */
@@ -2695,16 +2773,65 @@ static int32_t ad9361_txrx_synth_cp_calib(struct ad9361_rf_phy *phy,
 
 	/* REVIST: */
 	ad9361_spi_write(phy->spi, REG_RX_CP_LEVEL_DETECT + offs, 0x17);
-
+    /* ---- CP Level Detect
+        0x24B - 00010111
+        [7] - Open 
+        [6] - CP Level Detect Power Down
+        [5:3] - CP Level Threshold Low
+        [2:0] - CP Level Threshold High
+    */ 
 	ad9361_spi_write(phy->spi, REG_RX_DSM_SETUP_1 + offs, 0x0);
-
+    /* ---- DSM Setup 1
+        0x24D - 000000000
+        [7] - Open 
+        [6] - SIF CLK
+        [5] - SIF Reset Bar
+        [4:0] - SIF Addr
+    */ 
 	ad9361_spi_write(phy->spi, REG_RX_LO_GEN_POWER_MODE + offs, 0x00);
+    /* ---- RX LO Gen Power Mode
+        0x261 - 00000000 (5mA - recommended)
+        [7:6] - Open 
+        [5:4] - Power Mode
+        [3:0] - Open
+    */ 
 	ad9361_spi_write(phy->spi, REG_RX_VCO_LDO + offs, 0x0B);
+    /* ---- VCO LDO
+        0x248 - 00001011
+        [7] - VCO LDO Bypass 
+        [6:5] - VCO LDO Inrush 
+        [4:2] - VCO LDO Sel
+        [1:0] - VCO LDO Drop Sel
+    */ 
 	ad9361_spi_write(phy->spi, REG_RX_VCO_PD_OVERRIDES + offs, 0x02);
+    /* ---- VCO PDO Overrides
+        0x246 - 00000010
+        [7:4] - Open 
+        [3] - Power Down Varactor Ref
+        [2] - Power Down Varact Ref Tcf
+        [1] - Power Down Cal Tcf
+        [0] - Power Down VCO Buffer
+    */ 
 	ad9361_spi_write(phy->spi, REG_RX_CP_CURRENT + offs, 0x80);
+    /* ---- CP Current
+        0x23B - 10000000
+        [7] - Set to 1
+        [6] -  Vtune Out
+        [5:0] - Charge Pump Current 
+    */ 
 	ad9361_spi_write(phy->spi, REG_RX_CP_CONFIG + offs, 0x00);
+    /* ---- Cp Config
+        0x23D - 00000000
+        [7] - Half VCO 
+        [6] - Dither 
+        [5] - Open
+        [4] - Cp
+        [3] - F Cpcal
+        [2] - Cp Cal
+        [1:0] - Cp test
+    */ 
 
-	/* see Table 70 Example Calibration Times for RF VCO Cal */
+	/* see Table 70 Example Calibration Times for RF VCO Cal */ 
 	if (phy->pdata->fdd) {
 		vco_cal_cnt = VCO_CAL_EN | VCO_CAL_COUNT(3) | FB_CLOCK_ADV(2);
 	}
@@ -2718,21 +2845,74 @@ static int32_t ad9361_txrx_synth_cp_calib(struct ad9361_rf_phy *phy,
 	}
 
 	ad9361_spi_write(phy->spi, REG_RX_VCO_CAL + offs, vco_cal_cnt);
-
+    /* ---- VCO Cal
+        0x249 - 011111111
+        [7] - VCO Cal En
+        [6:4] - VCO Cal ALC Wait
+        [3:2] - VCO Cal Count
+        [1:0] - FB Clock Adv
+    */ 
+    
 	/* Enable FDD mode during calibrations */
 
 	if (!phy->pdata->fdd) {
 		ad9361_spi_writef(phy->spi, REG_PARALLEL_PORT_CONF_3,
 				  HALF_DUPLEX_MODE, 0);
+    /* ---- Parallel Port Config 3
+        0x012 - 00001000
+        [7] - VCO Cal En
+        [6:4] - VCO Cal ALC Wait
+        [3:2] - VCO Cal Count
+        [1:0] - FB Clock Adv
+    */ 
 	}
 
 	ad9361_spi_write(phy->spi, REG_ENSM_CONFIG_2, DUAL_SYNTH_MODE);
+    /* ---- ENSM Config 2
+        0x015 - 00000100
+        [7] - FDD External Control Enable 
+        [6] - Power Down RX synth
+        [5] - Power Down TX synth
+        [4] - TXNRX SPI Control
+        [3] - Synth Enable Pin Control Mode
+        [2] - Dual Synth Mode
+        [1] - Rx Synth Ready Mask
+        [0] - Tx Synth Ready Mask
+    */ 
+
 	ad9361_spi_write(phy->spi, REG_ENSM_CONFIG_1,
 		FORCE_ALERT_STATE |
 		TO_ALERT);
+    /* ---- ENSM Config 1
+        0x014 - 00000101
+        [7] - Enable Rx Data Port for Cal 
+        [6] - Force Rx on
+        [5] - Force Tx on
+        [4] - Enable ENSM Pin Control 
+        [3] - Level Mode
+        [2] - Force Alert State
+        [1] - Auto Gain Lock
+        [0] - To Alert 
+    */ 
+
 	ad9361_spi_write(phy->spi, REG_ENSM_MODE, FDD_MODE);
+    /* ---- ENSM Mode
+        0x013 - 00000001
+        [7:1] - Open 
+        [0] - FDD
+    */ 
 
 	ad9361_spi_write(phy->spi, REG_RX_CP_CONFIG + offs, CP_CAL_ENABLE);
+    /* ---- Cp Config
+        0x23D - 00000100
+        [7] - Half VCO 
+        [6] - Dither 
+        [5] - Open
+        [4] - Cp
+        [3] - F Cpcal
+        [2] - Cp Cal
+        [1:0] - Cp test
+    */ 
 
 	return ad9361_check_cal_done(phy, REG_RX_CAL_STATUS + offs,
 		CP_CAL_VALID, 1);
@@ -2748,9 +2928,23 @@ static int32_t ad9361_bb_dc_offset_calib(struct ad9361_rf_phy *phy)
 	dev_dbg(&phy->spi->dev, "%s", __func__);
 
 	ad9361_spi_write(phy->spi, REG_BB_DC_OFFSET_COUNT, 0x3F);
+    /* ---- BB DC Offset Count
+    0x193 - 00111111
+        [7:0] - BB DC Offset Count
+    */
 	ad9361_spi_write(phy->spi, REG_BB_DC_OFFSET_SHIFT, BB_DC_M_SHIFT(0xF));
+    /* ---- BB DC Offset Shift
+    0x190 - 00001111
+        [7] - Increase Count Duration
+        [6:5] - BB Tracking Decimate
+        [4:0] - BB DC M Shift
+    */
 	ad9361_spi_write(phy->spi, REG_BB_DC_OFFSET_ATTEN, BB_DC_OFFSET_ATTEN(1));
-
+    /* ---- BB DC Offset Attenuation
+    0x194 - 00000001
+        [7:4] - Open
+        [3:0] - BB DC Offset Atten
+    */
 	return ad9361_run_calibration(phy, BBDC_CAL);
 }
 
@@ -2769,21 +2963,44 @@ static int32_t ad9361_rf_dc_offset_calib(struct ad9361_rf_phy *phy,
 		__func__, rx_freq);
 
 	ad9361_spi_write(spi, REG_WAIT_COUNT, 0x20);
+    /* ---- Wait Count
+    0x185 - 00100000
+        [7:0] - Wait Count
+    */
 
 	if (rx_freq <= 4000000000ULL) {
 		ad9361_spi_write(spi, REG_RF_DC_OFFSET_COUNT,
 			phy->pdata->rf_dc_offset_count_low);
+        /* ---- RF DC Offset Count
+        0x186 - 00110010
+            [7:0] - RF DC Offset Count
+        */
 		ad9361_spi_write(spi, REG_RF_DC_OFFSET_CONFIG_1,
 			RF_DC_CALIBRATION_COUNT(4) | DAC_FS(2));
+        /* ---- RF DC Offset Config 1
+        0x187 - 00100100
+            [7:6] - Open
+            [5:4] - DAC FS 
+            [3:0] - RF DC Calibration Count
+        */
 		ad9361_spi_write(spi, REG_RF_DC_OFFSET_ATTEN,
 			RF_DC_OFFSET_ATTEN(
 			phy->pdata->dc_offset_attenuation_low));
-	}
+        /* ---- RF DC Offset Attenuation
+        0x188 - 00000101
+            [7:5] - RD DC Offset Table Update Count 
+            [4:0] - RF DC Offset Attenuation
+        */
 	else {
 		ad9361_spi_write(spi, REG_RF_DC_OFFSET_COUNT,
 			phy->pdata->rf_dc_offset_count_high);
+       /* ---- RF DC Offset Count
+        0x186 - 00101000 (0x28)
+            [7:0] - RF DC Offset Count
+        */
 		ad9361_spi_write(spi, REG_RF_DC_OFFSET_CONFIG_1,
 			RF_DC_CALIBRATION_COUNT(4) | DAC_FS(3));
+            
 		ad9361_spi_write(spi, REG_RF_DC_OFFSET_ATTEN,
 			RF_DC_OFFSET_ATTEN(
 			phy->pdata->dc_offset_attenuation_high));
@@ -2792,11 +3009,28 @@ static int32_t ad9361_rf_dc_offset_calib(struct ad9361_rf_phy *phy,
 	ad9361_spi_write(spi, REG_DC_OFFSET_CONFIG2,
 		USE_WAIT_COUNTER_FOR_RF_DC_INIT_CAL |
 		DC_OFFSET_UPDATE(3));
+    /* ---- DC Offset Config 2
+    0x18B - 10000011
+        [7] - Use wait counter for RF DC Init Cal
+        [6] - Enable Fast Settle Mode
+        [5] - Enable BB DC Offset Tracking
+        [4] - Reset Acc on gain change
+        [3] - Enable RF Offset Tracking 
+        [2:0] - DC Offset Update
+    */
 
 	if (phy->pdata->rx1rx2_phase_inversion_en ||
 		(phy->pdata->port_ctrl.pp_conf[1] & INVERT_RX2)) {
 		ad9361_spi_write(spi, REG_INVERT_BITS,
 				INVERT_RX1_RF_DC_CGOUT_WORD);
+        /* ---- Invert Bits
+        0x189 - 00010000 (16)
+            [7] - Invert Rx1 RF DC CGin Word
+            [6] - Invert Rx1 RF DC CGin Word
+            [5] - Invert Rx2 RF DC CGout Word
+            [4] - Invert Rx1 RF DC CGout Word
+            [3:0] - Open
+        */ 
 	} else {
 		ad9361_spi_write(spi, REG_INVERT_BITS,
 				INVERT_RX1_RF_DC_CGOUT_WORD |
@@ -3135,15 +3369,35 @@ int32_t ad9361_tracking_control(struct ad9361_rf_phy *phy, bool bbdc_track,
 
 	ad9361_spi_write(spi, REG_CALIBRATION_CONFIG_2,
 		CALIBRATION_CONFIG2_DFLT | K_EXP_PHASE(0x15));
+    /* ---- Calibration Config 2
+    0x16A - 01110101 (117)
+        [7] - Soft reset 
+        [6:5] - Must be 11 
+        [4:0] - K exp phase
+    */
 	ad9361_spi_write(spi, REG_CALIBRATION_CONFIG_3,
 		PREVENT_POS_LOOP_GAIN | K_EXP_AMPLITUDE(0x15));
-
+    /* ---- Calibration Config 3
+    0x16B - 10010101 (149)
+        [7] - Prevent pos loop gain 
+        [6:5] - Open
+        [4:0] - K exp amplitude
+    */
 	ad9361_spi_write(spi, REG_DC_OFFSET_CONFIG2,
 		USE_WAIT_COUNTER_FOR_RF_DC_INIT_CAL |
 		DC_OFFSET_UPDATE(phy->pdata->dc_offset_update_events) |
 		(bbdc_track ? ENABLE_BB_DC_OFFSET_TRACKING : 0) |
 		(rfdc_track ? ENABLE_RF_OFFSET_TRACKING : 0));
-
+    /* ---- DC Offset Config 2
+    0x18B - 10101101 (173)
+        [7] - Use Wait Counter for RF DC Init Cal
+        [6] - Enable Fast Setlle Mode
+        [5] - Enable BB DC Offset Tracking
+        [4] - Reset ACC on chain gain
+        [3] - Enable RF Offset Tracking
+        [2:0] - DC Offset Update
+    */ 
+    
 	ad9361_spi_writef(spi, REG_RX_QUAD_GAIN2,
 			 CORRECTION_WORD_DECIMATION_M(~0),
 			 phy->pdata->qec_tracking_slow_mode_en ? 4 : 0);
@@ -3261,6 +3515,11 @@ static int32_t ad9361_set_ref_clk_cycles(struct ad9361_rf_phy *phy,
 
 	return ad9361_spi_write(phy->spi, REG_REFERENCE_CLOCK_CYCLES,
 		REFERENCE_CLOCK_CYCLES_PER_US((ref_clk_hz / 100000L) - 1));
+    /* ---- Reference Clock Cycles
+    0x03A - 01111111 (127)
+        [7] - Open
+        [6:0] - Reference Clock Cycles per us
+    */
 }
 
 /**
@@ -3534,16 +3793,58 @@ static int32_t ad9361_pp_port_setup(struct ad9361_rf_phy *phy, bool restore_c3)
 
 	//	ad9361_spi_write(spi, REG_DIGITAL_IO_CTRL, pd->port_ctrl.digital_io_ctrl);
 	ad9361_spi_write(spi, REG_LVDS_INVERT_CTRL1, pd->port_ctrl.lvds_invert[0]);
-
+    /* ---- LVDS Invert Control1
+    0x03D - 11111111 (0xFF)
+        [7] - P0
+        [6] - P0
+        [5] - P1
+        [4] - P1
+        [3] - P1
+        [2] - P1
+        [1] - P1
+        [0] - P1
+    no invert LVDS used
+    */
     
 	ad9361_spi_write(spi, REG_LVDS_INVERT_CTRL2, pd->port_ctrl.lvds_invert[1]);
+    /* ---- LVDS Invert Control2
+    0x03E - 00001111 (0x0F)
+        [7] - FBCLK
+        [6] - Tx Frame
+        [5] - DATA_CLK
+        [4] - Rx Frame
+        [3] - P0
+        [2] - P0
+        [1] - P0
+        [0] - P0
+    */
 
 	if (pd->rx1rx2_phase_inversion_en ||
 		(pd->port_ctrl.pp_conf[1] & INVERT_RX2)) {
 
 		ad9361_spi_writef(spi, REG_PARALLEL_PORT_CONF_2, INVERT_RX2, 1);
+        /* ---- Parallel Port Configuration 2 
+        0x011 - 00000000 ?
+        [7] - FDD Alt Word Order
+        [6] - Invert Rx1
+        [5] - Invert Rx2
+        [4] - Invert Tx1
+        [3] - Invert Tx2
+        [2] - Invert Rx Frame
+        [1:0] - Delay Rx Data
+    */ 
+
 		ad9361_spi_writef(spi, REG_INVERT_BITS,
 				  INVERT_RX2_RF_DC_CGOUT_WORD, 0);
+        /* ---- Invert bits 
+        0x189 - 00000000 ?
+        [7] - Invert Rx1 RF DC CGin Word
+        [6] - Invert Rx1 RF DC CGin Word
+        [5] - Invert Rx2 RF DC CGout Word
+        [4] - Invert Rx1 RF DC CGout Word
+        [3:0] - Open
+    */ 
+
 	}
 
 	return 0;
@@ -3564,6 +3865,7 @@ static int32_t ad9361_gc_setup(struct ad9361_rf_phy *phy, struct gain_control *c
 
 	reg = DEC_PWR_FOR_GAIN_LOCK_EXIT | DEC_PWR_FOR_LOCK_LEVEL |
 		DEC_PWR_FOR_LOW_PWR;
+    // 32 | 64 | 128 = 224
 
 	if (ctrl->rx1_mode == RF_GAIN_HYBRID_AGC ||
 		ctrl->rx2_mode == RF_GAIN_HYBRID_AGC)
@@ -3571,11 +3873,21 @@ static int32_t ad9361_gc_setup(struct ad9361_rf_phy *phy, struct gain_control *c
 
 	reg |= RX1_GAIN_CTRL_SETUP(ctrl->rx1_mode) |
 		RX2_GAIN_CTRL_SETUP(ctrl->rx2_mode);
+    // 229
 
 	phy->agc_mode[0] = ctrl->rx1_mode;
 	phy->agc_mode[1] = ctrl->rx2_mode;
 
 	ad9361_spi_write(spi, REG_AGC_CONFIG_1, reg); // Gain Control Mode Select
+    /* ---- AGC Config 1
+        0x0FA -  11100101 (229)
+        [7] - Dec Pwr for Low Pwr
+        [6] - Dec Pwr for Lock Level
+        [5] - Dec Pwr for Gain Lock Exit 
+        [4] - Slow Attack Hybrid Mode 
+        [3:2] - Rx 2 Gain Control Setup
+        [1:0] - Rx 1 Gain Control Setup
+    */
 
 	/* AGC_USE_FULL_GAIN_TABLE handled in ad9361_load_gt() */
 	ad9361_spi_writef(spi, REG_AGC_CONFIG_2, MAN_GAIN_CTRL_RX1,
@@ -3913,7 +4225,14 @@ static int32_t ad9361_auxdac_set(struct ad9361_rf_phy *phy, int32_t dac,
 	/* Disable DAC if val == 0, Ignored in ENSM Auto Mode */
 	ad9361_spi_writef(spi, REG_AUXDAC_ENABLE_CTRL,
 		AUXDAC_MANUAL_BAR(dac), val_mV ? 0 : 1);
-
+    /* ---- AuxDAC Enable Control
+    0x023 - 00000000 
+        [7:6] - AuxDac Manual Bar
+        [5:4] - AuxDac Auto Tx Bar 
+        [3:2] - AuxDac Auto Bar
+        [1:0] - AuxDac Init Bar
+    */
+    
 	if (val_mV < 306)
 		val_mV = 306;
 
@@ -3931,12 +4250,44 @@ static int32_t ad9361_auxdac_set(struct ad9361_rf_phy *phy, int32_t dac,
 	switch (dac) {
 	case 1:
 		ad9361_spi_write(spi, REG_AUXDAC_1_WORD, val >> 2);
+        /* ---- AuxDAC 1 Word
+            0x018 -  
+            [7:6] - AuxDac Manual Bar
+            [5:4] - AuxDac Auto Tx Bar 
+            [3:2] - AuxDac Auto Bar
+            [1:0] - AuxDac Init Bar
+        */
 		ad9361_spi_write(spi, REG_AUXDAC_1_CONFIG, AUXDAC_1_WORD_LSB(val) | tmp);
+        /* ---- AuxDAC 1 Config
+            0x01A -  
+            [7:6] - Open
+            [5] - Comp Ctrl 1 
+            [4] - AuxDac 1 Step Factor
+            [3:2] - AuxDac Dac 1 Vref
+            [1:0] - AuxDac 1 Word
+        */
+
 		phy->auxdac1_value = val_mV;
 		break;
 	case 2:
 		ad9361_spi_write(spi, REG_AUXDAC_2_WORD, val >> 2);
+        /* ---- AuxDAC 2 Word
+            0x019 -  
+            [7:6] - AuxDac Manual Bar
+            [5:4] - AuxDac Auto Tx Bar 
+            [3:2] - AuxDac Auto Bar
+            [1:0] - AuxDac Init Bar
+        */
+
 		ad9361_spi_write(spi, REG_AUXDAC_2_CONFIG, AUXDAC_2_WORD_LSB(val) | tmp);
+        /* ---- AuxDAC 2 Config
+            0x01B -  
+            [7:6] - Open
+            [5] - Comp Ctrl 1 
+            [4] - AuxDac 2 Step Factor
+            [3:2] - AuxDac Dac 2 Vref
+            [1:0] - AuxDac 2 Word
+        */
 		phy->auxdac2_value = val_mV;
 		break;
 	default:
@@ -3994,12 +4345,45 @@ struct auxdac_control *ctrl)
 		AUXDAC_INIT_BAR(~0),
 		tmp); /* Auto Control */
 
+    /* ---- AuxDAC Enable Control
+    0x023 - 
+        [7:6] - AuxDac Manual Bar
+        [5:4] - AuxDac Auto Tx Bar 
+        [3:2] - AuxDac Auto Bar
+        [1:0] - AuxDac Init Bar
+    */
+
 	ad9361_spi_writef(spi, REG_EXTERNAL_LNA_CTRL,
 		AUXDAC_MANUAL_SELECT, ctrl->auxdac_manual_mode_en);
+    /* ---- External LNA Control
+    0x026 - 000000000
+        [7] - AuxDAC Manual Select
+        [6] - External LNA 2 Control
+        [5] - External LNA 1 Control  
+        [4] - GPO Manual Select
+        [3:0] - Open
+    */
+
 	ad9361_spi_write(spi, REG_AUXDAC1_RX_DELAY, ctrl->dac1_rx_delay_us);
+    /* ---- AuxDAC1 RX Delay
+    0x030 - 000000000
+        [7:0] - AuxDAC1 RX Delay
+    */
 	ad9361_spi_write(spi, REG_AUXDAC1_TX_DELAY, ctrl->dac1_tx_delay_us);
+    /* ---- AuxDAC2 TX Delay
+    0x031 - 000000000
+        [7:0] - AuxDAC2 TX Delay
+    */
 	ad9361_spi_write(spi, REG_AUXDAC2_RX_DELAY, ctrl->dac2_rx_delay_us);
+    /* ---- AuxDAC2 RX Delay
+    0x032 - 000000000
+        [7:0] - AuxDAC2 RX Delay
+    */
 	ad9361_spi_write(spi, REG_AUXDAC2_TX_DELAY, ctrl->dac2_tx_delay_us);
+    /* ---- AuxDAC2 TX Delay
+    0x033 - 000000000
+        [7:0] - AuxDAC2 TX Delay
+    */
 
 	return 0;
 }
@@ -4024,19 +4408,49 @@ struct auxadc_control *ctrl,
 		(bbpll_freq / 1000UL), (1 << 29));
 
 	ad9361_spi_write(spi, REG_TEMP_OFFSET, ctrl->offset);
+    /* ---- Offset
+    0x00B - 11001110 (206)
+        [7:0] - Temp Sense Offset
+    */
 	ad9361_spi_write(spi, REG_START_TEMP_READING, 0x00);
+    /* ---- Start Temp Reading
+    0x00C - 000000000
+        [7:1] - Open
+        [0] - Start temp Reading
+    */
 	ad9361_spi_write(spi, REG_TEMP_SENSE2,
 		MEASUREMENT_TIME_INTERVAL(val) |
 		(ctrl->periodic_temp_measuremnt ?
 	TEMP_SENSE_PERIODIC_ENABLE : 0));
+    /* ---- Temp Sense 2
+    0x00D - 000000001
+        [7:1] - Measurement Time Interval
+        [0] - Temp Sense Periodic Enable
+    */
 	ad9361_spi_write(spi, REG_TEMP_SENSOR_CONFIG,
 		TEMP_SENSOR_DECIMATION(
 		ilog2(ctrl->temp_sensor_decimation) - 8));
+    /* ---- Temp Sensor Config
+    0x00F - 000000000
+        [7:3] - Open
+        [2:0] - Temp Sensor Decimation
+    */
 	ad9361_spi_write(spi, REG_AUXADC_CLOCK_DIVIDER,
 		bbpll_freq / ctrl->auxadc_clock_rate);
+    /* ---- Aux ADC Clock Divider
+    0x01C - 
+        [7:6] - Open
+        [5:0] - Aux ADC Clock Divider
+    */
 	ad9361_spi_write(spi, REG_AUXADC_CONFIG,
 		AUX_ADC_DECIMATION(
 		ilog2(ctrl->auxadc_decimation) - 8));
+    /* ---- Aux ADC Config
+    0x01D - 00000000
+        [7:4] - Open
+        [3:1] - AUX ADC Decimation
+        [0] - AUX ADC Power Down
+    */  
 
 	return 0;
 }
@@ -4087,7 +4501,22 @@ struct ctrl_outs_control *ctrl)
 	dev_dbg(&phy->spi->dev, "%s", __func__);
 
 	ad9361_spi_write(spi, REG_CTRL_OUTPUT_POINTER, ctrl->index); // Ctrl Out index
+    /* ---- Control Ouput Pointer
+    0x035 - 00000111
+        [7:0] - CH1 AGC State1, CH1 AGC State0, CH1 Gain Lock 
+    */
 	return ad9361_spi_write(spi, REG_CTRL_OUTPUT_ENABLE, ctrl->en_mask); // Ctrl Out [7:0] output enable
+    /* ---- Control Ouput Enable
+    0x036 - 11111111
+        [7] - En ctrl7
+        [6] - En ctrl6
+        [5] - En ctrl5
+        [4] - En ctrl4
+        [3] - En ctrl3
+        [2] - En ctrl2
+        [1] - En ctrl1
+        [0] - En ctrl0
+    */
 }
 
 /**
@@ -4110,21 +4539,30 @@ static int32_t ad9361_gpo_setup(struct ad9361_rf_phy *phy, struct gpo_control *c
 				(ctrl->gpo1_slave_tx_en << 1) |
 				(ctrl->gpo2_slave_tx_en << 2) |
 				(ctrl->gpo3_slave_tx_en << 3)));
-
+    /* ---- Auto GPO
+    0x020 - 000000000
+        [7:4] - GPO Enable Auto RX
+        [3:0] - GPO Enable Auto TX
+    */
 	ad9361_spi_write(spi, REG_GPO_FORCE_AND_INIT,
 			 GPO_INIT_STATE(ctrl->gpo0_inactive_state_high_en |
 				(ctrl->gpo1_inactive_state_high_en << 1) |
 				(ctrl->gpo2_inactive_state_high_en << 2) |
 				(ctrl->gpo3_inactive_state_high_en << 3)));
+    /* ---- GPO Force and Init
+    0x027 - 000000000
+        [7:4] - GPO Manual Control
+        [3:0] - GPO Init State
+    */
 
-	ad9361_spi_write(spi, REG_GPO0_RX_DELAY, ctrl->gpo0_rx_delay_us);
-	ad9361_spi_write(spi, REG_GPO0_TX_DELAY, ctrl->gpo0_tx_delay_us);
-	ad9361_spi_write(spi, REG_GPO1_RX_DELAY, ctrl->gpo1_rx_delay_us);
-	ad9361_spi_write(spi, REG_GPO1_TX_DELAY, ctrl->gpo1_tx_delay_us);
-	ad9361_spi_write(spi, REG_GPO2_RX_DELAY, ctrl->gpo2_rx_delay_us);
-	ad9361_spi_write(spi, REG_GPO2_TX_DELAY, ctrl->gpo2_tx_delay_us);
-	ad9361_spi_write(spi, REG_GPO3_RX_DELAY, ctrl->gpo3_rx_delay_us);
-	ad9361_spi_write(spi, REG_GPO3_TX_DELAY, ctrl->gpo3_tx_delay_us);
+	ad9361_spi_write(spi, REG_GPO0_RX_DELAY, ctrl->gpo0_rx_delay_us); //00000000
+	ad9361_spi_write(spi, REG_GPO0_TX_DELAY, ctrl->gpo0_tx_delay_us); //00000000
+	ad9361_spi_write(spi, REG_GPO1_RX_DELAY, ctrl->gpo1_rx_delay_us); //00000000
+	ad9361_spi_write(spi, REG_GPO1_TX_DELAY, ctrl->gpo1_tx_delay_us); //00000000
+	ad9361_spi_write(spi, REG_GPO2_RX_DELAY, ctrl->gpo2_rx_delay_us); //00000000
+	ad9361_spi_write(spi, REG_GPO2_TX_DELAY, ctrl->gpo2_tx_delay_us); //00000000
+	ad9361_spi_write(spi, REG_GPO3_RX_DELAY, ctrl->gpo3_rx_delay_us); //00000000
+	ad9361_spi_write(spi, REG_GPO3_TX_DELAY, ctrl->gpo3_tx_delay_us); //00000000
 
 	return 0;
 }
@@ -5330,32 +5768,39 @@ int32_t ad9361_setup(struct ad9361_rf_phy *phy)
 	if (ret < 0)
 		return ret;
 
-    
+    // Parallel port configuration and invert RX/TX
 	ret = ad9361_pp_port_setup(phy, false);
 	if (ret < 0)
 		return ret;
 
+    // Aux config and external LNA
 	ret = ad9361_auxdac_setup(phy, &pd->auxdac_ctrl);
 	if (ret < 0)
 		return ret;
 
+
 	bbpll_freq = clk_get_rate(phy, phy->ref_clk_scale[BBPLL_CLK]);
+    // AUX ADC config and Temp Sensors
 	ret = ad9361_auxadc_setup(phy, &pd->auxadc_ctrl, bbpll_freq);
 	if (ret < 0)
 		return ret;
 
+    // Control Ouput pins enable
 	ret = ad9361_ctrl_outs_setup(phy, &pd->ctrl_outs_ctrl);
 	if (ret < 0)
 		return ret;
 
+    // GPO Pin Control
 	ret = ad9361_gpo_setup(phy, &pd->gpo_ctrl);
 	if (ret < 0)
 		return ret;
 
+    // Reference Clock per us
 	ret = ad9361_set_ref_clk_cycles(phy, refin_Hz);
 	if (ret < 0)
 		return ret;
 
+    // Setup Ext LNA
 	ret = ad9361_setup_ext_lna(phy, &pd->elna_ctrl);
 	if (ret < 0)
 		return ret;
@@ -5364,12 +5809,13 @@ int32_t ad9361_setup(struct ad9361_rf_phy *phy)
 	 * This allows forcing a lower F_REF window
 	 * (worse phase noise, better fractional spurs)
 	 */
+
 	pd->trx_synth_max_fref = clamp_t(uint32_t, pd->trx_synth_max_fref,
 					 MIN_SYNTH_FREF, MAX_SYNTH_FREF);
-
 	ref_freq = ad9361_ref_div_sel(refin_Hz, pd->trx_synth_max_fref);
 	if (!ref_freq)
 		return -EINVAL;
+
 
 	ret = clk_set_rate(phy, phy->ref_clk_scale[RX_REFCLK], ref_freq);
 	if (ret < 0) {
@@ -5383,10 +5829,12 @@ int32_t ad9361_setup(struct ad9361_rf_phy *phy)
 		return ret;
 	}
 
+    //
 	ret = ad9361_txrx_synth_cp_calib(phy, ref_freq, false); /* RXCP */
 	if (ret < 0)
 		return ret;
 
+    // 
 	ret = ad9361_txrx_synth_cp_calib(phy, ref_freq, true); /* TXCP */
 	if (ret < 0)
 		return ret;
@@ -5439,44 +5887,53 @@ int32_t ad9361_setup(struct ad9361_rf_phy *phy)
 	ad9361_clk_mux_set_parent(phy->ref_clk_scale[TX_RFPLL],
 		pd->use_ext_tx_lo);
 
+    //
 	ret = ad9361_load_mixer_gm_subtable(phy);
 	if (ret < 0)
 		return ret;
 
+    //
 	ret = ad9361_gc_setup(phy, &pd->gain_ctrl);
 	if (ret < 0)
 		return ret;
 
+    //
 	ret = ad9361_rx_bb_analog_filter_calib(phy,
 		real_rx_bandwidth,
 		bbpll_freq);
 	if (ret < 0)
 		return ret;
 
+    //
 	ret = ad9361_tx_bb_analog_filter_calib(phy,
 		real_tx_bandwidth,
 		bbpll_freq);
 	if (ret < 0)
 		return ret;
 
+    // 
 	ret = ad9361_rx_tia_calib(phy, real_rx_bandwidth);
 	if (ret < 0)
 		return ret;
 
+    // 
 	ret = ad9361_tx_bb_second_filter_calib(phy, real_tx_bandwidth);
 	if (ret < 0)
 		return ret;
 
+    // 0x200 - 0x226 ADC registers
 	ret = ad9361_rx_adc_setup(phy,
 		bbpll_freq,
 		clk_get_rate(phy, phy->ref_clk_scale[ADC_CLK]));
 	if (ret < 0)
 		return ret;
 
+    // 
 	ret = ad9361_bb_dc_offset_calib(phy);
 	if (ret < 0)
 		return ret;
 
+    //
 	ret = ad9361_rf_dc_offset_calib(phy,
 		ad9361_from_clk(clk_get_rate(phy, phy->ref_clk_scale[RX_RFPLL])));
 	if (ret < 0)
@@ -5485,10 +5942,12 @@ int32_t ad9361_setup(struct ad9361_rf_phy *phy)
 	phy->current_rx_bw_Hz = pd->rf_rx_bandwidth_Hz;
 	phy->current_tx_bw_Hz = pd->rf_tx_bandwidth_Hz;
 	phy->last_tx_quad_cal_phase = ~0;
+    //
 	ret = ad9361_tx_quad_calib(phy, real_rx_bandwidth, real_tx_bandwidth, -1);
 	if (ret < 0)
 		return ret;
 
+    //
 	ret = ad9361_tracking_control(phy, phy->bbdc_track_en,
 		phy->rfdc_track_en, phy->quad_track_en);
 	if (ret < 0)
